@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InfoScope Dashboard - AI-powered Entity Recognition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --background-color: #f4f7f9;
+            --text-color: #333;
+            --error-color: #e74c3c;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 20px 0;
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .title-entity {
+            color: var(--error-color);
+        }
+        .description {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        .tool-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        #loading, #error {
+            display: none;
+            margin-top: 20px;
+            text-align: center;
+        }
+        #results {
+            margin-top: 30px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 4px;
+            background-color: white;
+        }
+        #error {
+            color: var(--error-color);
+        }
+        .supported-lang {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+            font-weight: 300;
+        }
+        .plans-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+        .plan-card {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 0 10px;
+            text-align: center;
+        }
+        .plan-card h3 {
+            color: var(--primary-color);
+        }
+        .plan-price {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        .plan-features {
+            list-style-type: none;
+            padding: 0;
+        }
+        .plan-features li {
+            margin-bottom: 10px;
+        }
+        .plan-card.recommended {
+            border: 2px solid var(--error-color);  
+            position: relative;
+        }
+        .recommended-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: var(--error-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+        }
+        .tier-display {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .tier-display:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+        .logout-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .subscription-toggle {
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+        .subscription-toggle:hover {
+            text-decoration: underline;
+        }
+
+        .usage-counter {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        footer .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .delete-account {
+            color: var(--error-color);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .delete-account:hover {
+            text-decoration: underline;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            margin: 0 10px;
+            padding: 10px 20px;
+        }
+
+        .confirm-delete {
+            background-color: var(--error-color);
+        }
+
+        .cancel-delete {
+            background-color: #ccc;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Info<span class="title-entity">Scope</span></h1>
+            <p class="description">Easily extract names, addresses, and other key details from your text using AI-powered recognition.</p>
+            <p class="supported-lang">Paste your English text below</p>
+            <!-- Tier Display -->
+            <span class="tier-display">
+                <span id="userTier"></span>Requests Remaining: <span id="requestsRemaining"></span>
+            </span>
+            <!-- Logout Button -->
+            <a href="/logout" class="logout-btn" action="/logout">Logout</a>
+        </div>
+    </header>
+
+    <main class="container">      
+
+        <div class="tool-container">
+            <textarea id="textInput" placeholder="Enter your text here..."></textarea>
+            <button onclick="extractEntities()">Extract Entities</button>
+            
+            <div id="loading" style="display:none;">Analyzing your text... Please wait.</div>
+            
+            <div id="error" style="color: red;"></div>
+            
+            <div id="results" style="display: none;">
+                <h3>Extracted Entities:</h3>
+                <ul id="entityList"></ul>
+            </div>
+        </div>
+
+        <!-- Subscription Section -->
+        <div id="tierSection" class="plans-section">
+            <div class="plan-card">
+                <h3>Free Tier</h3>
+                <p class="plan-price">€0</p>
+                <ul class="plan-features">
+                    <li>2 requests per day</li>
+                </ul>
+            </div>
+            <div class="plan-card">
+                <h3>Pro Tier</h3>
+                <p class="plan-price">€7.99</p>
+                <ul class="plan-features">
+                    <li>500 requests</li>
+                </ul>
+                <button onclick="window.location.href='https://buy.stripe.com/28ocQ1aA840b2EEbIK';">Buy Pro</button>
+            </div>
+            <div class="plan-card recommended">
+                <span class="recommended-badge">Recommended</span>
+                <h3>Premium Tier</h3>
+                <p class="plan-price">€12.99</p>
+                <ul class="plan-features">
+                    <li>1000 requests</li>
+                </ul>
+                <button onclick="window.location.href='https://buy.stripe.com/28oaHT5fO40b3II9AB';">Buy Pro</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>2024 InfoScope AI. All rights reserved.</p>
+            <p class="delete-account" onclick="showDeleteConfirmation()">Delete Account</p>
+
+            <div id="deleteModal" class="modal">
+                <div class="modal-content">
+                    <h3>Delete Account</h3>
+                    <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                    <div class="modal-buttons">
+                        <button class="confirm-delete" onclick="deleteAccount()">Yes, Delete</button>
+                        <button class="cancel-delete" onclick="hideDeleteConfirmation()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <script>
+    function updateUserInfo() {
+    fetch('/user-info')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('requestsRemaining').textContent = data.requestsRemaining;
+        })
+        .catch(error => console.error('Error fetching user info:', error));
+    }
+
+    // Call this function when the page loads
+    document.addEventListener('DOMContentLoaded', updateUserInfo);
+
+    // Initialize Stripe with your public key
+    const stripe = Stripe('pk_test_51Pw1UcGBOD6BX2Y3dygvFKoIXSvYt7CIoSfsMnmQHmPKq5cM5a3DcO9xrJdEPMexjAXTSyZ98ojYcqyCDZuXyJuS00jDXjn1bM'); // Replace with your actual Stripe public key
+
+    // Pro Tier payment button handler
+    document.getElementById('proButton').addEventListener('click', async () => {
+        try {
+            // Make a POST request to create the checkout session for Pro
+            const response = await fetch('/create-checkout-session-pro', { method: 'POST' });
+            const session = await response.json();
+            
+            // Redirect to Stripe checkout
+            const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+
+            // If an error occurs during redirect
+            if (error) {
+                document.getElementById('error').textContent = error.message;
+            }
+        } catch (err) {
+            document.getElementById('error').textContent = "An error occurred while processing payment.";
+        }
+    });
+
+    // Premium Tier payment button handler
+    document.getElementById('premiumButton').addEventListener('click', async () => {
+        try {
+            // Make a POST request to create the checkout session for Premium
+            const response = await fetch('/create-checkout-session-premium', { method: 'POST' });
+            const session = await response.json();
+            
+            // Redirect to Stripe checkout
+            const { error } = await stripe.redirectToCheckout({ sessionId: session.id });
+
+            // If an error occurs during redirect
+            if (error) {
+                document.getElementById('error').textContent = error.message;
+            }
+        } catch (err) {
+            document.getElementById('error').textContent = "An error occurred while processing payment.";
+        }
+    });
+
+    // Function to handle the extraction of entities
+    async function extractEntities() {
+        const text = document.getElementById("textInput").value;
+
+        if (text.trim() === "") {
+            alert("Please enter some text!");
+            return;
+        }
+
+        // Show loading
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('results').style.display = 'none';
+        document.getElementById('error').style.display = 'none';
+
+        try {
+            const response = await fetch('/extract_entities', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: text })
+            });
+
+            const result = await response.json();
+
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+
+            if (response.ok) {
+                const entitiesList = document.getElementById('entityList');
+                entitiesList.innerHTML = ''; // Clear previous results
+
+                result.entities.forEach(entity => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${entity.text} (${entity.label})`;
+                    entitiesList.appendChild(listItem);
+                });
+                updateUserInfo();
+
+                // Show the results
+                document.getElementById('results').style.display = 'block';
+            } else {
+                document.getElementById('error').textContent = result.error || "An error occurred.";
+                document.getElementById('error').style.display = 'block';
+            }
+
+        } catch (error) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').textContent = "An error occurred.";
+            document.getElementById('error').style.display = 'block';
+        }
+    }
+
+    function showDeleteConfirmation() {
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function hideDeleteConfirmation() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+        function showDeleteConfirmation() {
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+
+        function hideDeleteConfirmation() {
+            document.getElementById('deleteModal').style.display = 'none';
+        }
+
+    async function deleteAccount() {
+        try {
+            const response = await fetch('/delete-account', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(result.message);
+            // Redirect to the login page or home page after successful deletion
+            window.location.href = '/login'; // Adjust this URL as needed
+        } else {
+            alert(result.error || 'An error occurred while deleting the account');
+        }
+        } catch (error) {
+        console.error('Error deleting account:', error);
+        alert('An error occurred while deleting the account');
+        } finally {
+            hideDeleteConfirmation();
+        }
+    }
+    </script>
+</body>
+</html>
